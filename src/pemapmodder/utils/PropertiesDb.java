@@ -14,6 +14,7 @@ public class PropertiesDb{
 	public final static int TYPE_INT_ARRAY=3;
 	public final static int TYPE_STRING=4;
 	public final static int TYPE_STRING_ARRAY=5;
+	public final static int TYPE_PROPERTIES_DB=6;
 	public final static String ARRAY_SPLITER="0~1`2~3`4~5`6~7`8~9";
 	public final static String[] getTypeNames(){
 		String[] out={};
@@ -23,6 +24,7 @@ public class PropertiesDb{
 		out[TYPE_INT_ARRAY]="intAry";
 		out[TYPE_STRING]="oneStr";
 		out[TYPE_STRING]="strAry";
+		out[TYPE_PROPERTIES_DB]="propdb";
 		return out;
 	}
 	public static final int getType(String name){
@@ -32,23 +34,22 @@ public class PropertiesDb{
 		}
 		return -1;
 	}
-	private File file;
-	private Bundle data;
-	private String[] keys;
-	private int[] types;
+	public Context app;
+	public File file;
+	public Bundle data;
+	public String[] keys;
+	public int[] types;
 	public PropertiesDb(Context app, File file, Bundle data, String[] keys, int[] types)throws Exception{
 		if(file.isDirectory())throw new Exception();
+		this.app=app;
 		this.file=file;
 		this.data=data;
 		this.keys=keys;
 		this.types=types;
-		if(!file.exists()){
-			file.createNewFile();
-			
-		}
-		else{
-			reload();
-		}
+		file.createNewFile();
+		if(!file.exists())
+			save();
+		else reload();
 	}
 	public Bundle getData() {
 		return data;
@@ -118,6 +119,11 @@ public class PropertiesDb{
 					break;
 				case TYPE_STRING_ARRAY:
 					this.data.putStringArray(key, datum.split(ARRAY_SPLITER));
+					this.keys[i]=key;
+					this.types[i]=type;
+					break;
+				case TYPE_PROPERTIES_DB:
+					this.data.putString(key, datum);
 					this.keys[i]=key;
 					this.types[i]=type;
 					break;
@@ -203,6 +209,14 @@ public class PropertiesDb{
 					}
 					out.write(strs[strs.length-1]);
 					break;
+				case TYPE_PROPERTIES_DB:
+					String path=data.getString(keys[i]);
+					out.write(getTypeNames()[TYPE_PROPERTIES_DB]);
+					out.append('>');
+					out.write(keys[i]);
+					out.write('=');
+					out.write(path);
+					break;
 				}
 				out.append('\n');
 			}
@@ -284,5 +298,39 @@ public class PropertiesDb{
 		keys[keys.length]=key;
 		types[types.length]=TYPE_STRING_ARRAY;
 		this.data.putStringArray(key, data);
+	}
+	public void setDb(PropertiesDb db, String key){
+		String data=db.getFile().getAbsolutePath();
+		for(int i=0; i<keys.length; i++){
+			if(keys[i]==key){
+				types[i]=TYPE_PROPERTIES_DB;
+				this.data.putString(key, data);
+				return;
+			}
+		}
+		keys[keys.length]=key;
+		types[types.length]=TYPE_PROPERTIES_DB;
+		this.data.putString(key, data);
+	}
+	public String[] getStringArray(String key){
+		return data.getStringArray(key);
+	}
+	public String getString(String key){
+		return data.getString(key);
+	}
+	public int getInt(String key){
+		return data.getInt(key);
+	}
+	public int[] getIntArray(String key){
+		return data.getIntArray(key);
+	}
+	public double getDouble(String key){
+		return data.getDouble(key);
+	}
+	public double[] getDoubleArray(String key){
+		return data.getDoubleArray(key);
+	}
+	public PropertiesDb getDb(String key) throws Exception{
+		return new PropertiesDb(app, new File(data.getString(key)), new Bundle(), new String[0], new int[0]);
 	}
 }
