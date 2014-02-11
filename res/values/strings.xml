@@ -4,5 +4,7 @@
     <string name="app_name">MCPEIT</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="MAIN_modMaker">ModPE Maker</string>
+    <string name="MAIN_noMedia">Please mount and make-writable your external storage (SD Card)</string>
 
 </resources>
